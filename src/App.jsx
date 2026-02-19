@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import ParticleBackground from './components/ParticleBackground.jsx'
 import ProgressHeader from './components/ProgressHeader.jsx'
+import Sidebar from './components/Sidebar.jsx'
+
+// Steps
 import WelcomeStep from './components/steps/WelcomeStep.jsx'
 import ScalarStep from './components/steps/ScalarStep.jsx'
 import VectorStep from './components/steps/VectorStep.jsx'
@@ -11,20 +14,55 @@ import RankExplorerStep from './components/steps/RankExplorerStep.jsx'
 import ConversionStep from './components/steps/ConversionStep.jsx'
 import RealWorldStep from './components/steps/RealWorldStep.jsx'
 import ComparisonStep from './components/steps/ComparisonStep.jsx'
+import CVImagesStep from './components/steps/CVImagesStep.jsx'
+import CVConvolutionStep from './components/steps/CVConvolutionStep.jsx'
 import PlaygroundStep from './components/steps/PlaygroundStep.jsx'
 
-const STEPS = [
-  { id: 0, label: 'Welcome',       icon: '🚀', component: WelcomeStep },
-  { id: 1, label: 'Scalars',       icon: '⚡', component: ScalarStep },
-  { id: 2, label: 'Vectors',       icon: '➡️', component: VectorStep },
-  { id: 3, label: 'Matrices',      icon: '🔲', component: MatrixStep },
-  { id: 4, label: 'Tensors',       icon: '🧊', component: TensorIntroStep },
-  { id: 5, label: 'Rank & Shape',  icon: '📐', component: RankExplorerStep },
-  { id: 6, label: 'Conversion',    icon: '🔄', component: ConversionStep },
-  { id: 7, label: 'Real World',    icon: '🌍', component: RealWorldStep },
-  { id: 8, label: 'Comparison',    icon: '⚖️', component: ComparisonStep },
-  { id: 9, label: 'Playground',    icon: '🎮', component: PlaygroundStep },
+const CHAPTERS = [
+  {
+    title: 'Foundations',
+    steps: [
+      { id: 'welcome', label: 'Welcome', icon: '🚀', component: WelcomeStep },
+      { id: 'scalars', label: 'Scalars', icon: '⚡', component: ScalarStep },
+      { id: 'vectors', label: 'Vectors', icon: '➡️', component: VectorStep },
+      { id: 'matrices', label: 'Matrices', icon: '🔲', component: MatrixStep },
+    ]
+  },
+  {
+    title: 'Tensors Core',
+    steps: [
+      { id: 'tensors', label: 'Tensors', icon: '🧊', component: TensorIntroStep },
+      { id: 'rank', label: 'Rank & Shape', icon: '📐', component: RankExplorerStep },
+      { id: 'conversion', label: 'Conversion', icon: '🔄', component: ConversionStep },
+      { id: 'realworld', label: 'Real World', icon: '🌍', component: RealWorldStep },
+      { id: 'comparison', label: 'Comparison', icon: '⚖️', component: ComparisonStep },
+    ]
+  },
+  {
+    title: 'Computer Vision',
+    steps: [
+      { id: 'cv_images', label: 'Images as Tensors', icon: '🖼️', component: CVImagesStep },
+      { id: 'cv_conv', label: 'Convolutions', icon: '🔍', component: CVConvolutionStep },
+    ]
+  },
+  {
+    title: 'Practice',
+    steps: [
+      { id: 'playground', label: 'Playground', icon: '🎮', component: PlaygroundStep },
+    ]
+  }
 ]
+
+// Flatten steps and assign global indices
+let globalCounter = 0
+const STEPS = CHAPTERS.flatMap(ch =>
+  ch.steps.map(st => ({ ...st, globalIndex: globalCounter++ }))
+)
+
+const chaptersWithGlobalIndices = CHAPTERS.map(ch => ({
+  ...ch,
+  steps: ch.steps.map(st => STEPS.find(s => s.id === st.id))
+}))
 
 const slideVariants = {
   enter: (dir) => ({
@@ -41,8 +79,8 @@ const slideVariants = {
 }
 
 export default function App() {
-  const [step, setStep]       = useState(0)
-  const [direction, setDir]   = useState(1)
+  const [step, setStep] = useState(0)
+  const [direction, setDir] = useState(1)
   const [visited, setVisited] = useState(new Set([0]))
 
   const goTo = (next) => {
@@ -58,7 +96,7 @@ export default function App() {
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'ArrowRight') next()
-      if (e.key === 'ArrowLeft')  prev()
+      if (e.key === 'ArrowLeft') prev()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -68,84 +106,90 @@ export default function App() {
   const progress = ((step) / (STEPS.length - 1)) * 100
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className="layout-container">
       <ParticleBackground />
 
-      <ProgressHeader
-        steps={STEPS}
-        current={step}
-        progress={progress}
-        visited={visited}
+      <Sidebar
+        chapters={chaptersWithGlobalIndices}
+        currentStep={step}
         goTo={goTo}
+        visited={visited}
       />
 
-      {/* STEP CONTENT */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={step}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-          >
-            <StepComponent onNext={next} onPrev={prev} stepIndex={step} totalSteps={STEPS.length} />
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      <div className="main-wrapper">
+        <ProgressHeader
+          steps={STEPS}
+          current={step}
+          progress={progress}
+          visited={visited}
+          goTo={goTo}
+        />
 
-      {/* BOTTOM NAV */}
-      <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        padding: '1rem 2rem',
-        background: 'linear-gradient(to top, rgba(5,8,21,1) 60%, transparent)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        zIndex: 50,
-      }}>
-        <button
-          className="btn btn-outline"
-          onClick={prev}
-          disabled={step === 0}
-          style={{ minWidth: 120 }}
-        >
-          ← Previous
-        </button>
-
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          {STEPS.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              style={{
-                width: i === step ? 24 : 8,
-                height: 8,
-                borderRadius: 4,
-                border: 'none',
-                cursor: 'pointer',
-                background: i === step
-                  ? 'linear-gradient(90deg,#6c63ff,#00d4ff)'
-                  : visited.has(i)
-                    ? 'rgba(108,99,255,0.5)'
-                    : 'rgba(255,255,255,0.15)',
-                transition: 'all 0.3s ease',
-                padding: 0,
-              }}
-            />
-          ))}
+        {/* STEP CONTENT */}
+        <div className="content-scroll">
+          <main style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, minHeight: '100%', paddingBottom: '80px' }}>
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                <StepComponent onNext={next} onPrev={prev} stepIndex={step} totalSteps={STEPS.length} />
+              </motion.div>
+            </AnimatePresence>
+          </main>
         </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={next}
-          disabled={step === STEPS.length - 1}
-          style={{ minWidth: 120 }}
-        >
-          {step === STEPS.length - 2 ? 'Playground →' : 'Next →'}
-        </button>
-      </nav>
+        {/* BOTTOM NAV */}
+        <nav className="bottom-nav">
+          <button
+            className="btn btn-outline"
+            onClick={prev}
+            disabled={step === 0}
+            style={{ minWidth: 120 }}
+          >
+            ← Previous
+          </button>
+
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            {STEPS.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                aria-label={`Go to step ${i}`}
+                style={{
+                  width: i === step ? 24 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: i === step
+                    ? 'linear-gradient(90deg,#6c63ff,#00d4ff)'
+                    : visited.has(i)
+                      ? 'rgba(108,99,255,0.5)'
+                      : 'rgba(255,255,255,0.15)',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={next}
+            disabled={step === STEPS.length - 1}
+            style={{ minWidth: 120 }}
+          >
+            {step >= STEPS.length - 2 ? 'Playground →' : 'Next →'}
+          </button>
+        </nav>
+      </div>
     </div>
   )
 }
