@@ -16,6 +16,9 @@ import RealWorldStep from './components/steps/RealWorldStep.jsx'
 import ComparisonStep from './components/steps/ComparisonStep.jsx'
 import CVImagesStep from './components/steps/CVImagesStep.jsx'
 import CVConvolutionStep from './components/steps/CVConvolutionStep.jsx'
+import CVBoundingBoxStep from './components/steps/CVBoundingBoxStep.jsx'
+import CVYoloGridStep from './components/steps/CVYoloGridStep.jsx'
+import CVTrackingStep from './components/steps/CVTrackingStep.jsx'
 import PlaygroundStep from './components/steps/PlaygroundStep.jsx'
 
 const CHAPTERS = [
@@ -43,6 +46,14 @@ const CHAPTERS = [
     steps: [
       { id: 'cv_images', label: 'Images as Tensors', icon: '🖼️', component: CVImagesStep },
       { id: 'cv_conv', label: 'Convolutions', icon: '🔍', component: CVConvolutionStep },
+    ]
+  },
+  {
+    title: 'Object Detection',
+    steps: [
+      { id: 'cv_bbox', label: 'Bounding Boxes', icon: '🎯', component: CVBoundingBoxStep },
+      { id: 'cv_yolo', label: 'YOLO Grid', icon: '▦', component: CVYoloGridStep },
+      { id: 'cv_track', label: 'Tracking Tensors', icon: '⏱️', component: CVTrackingStep },
     ]
   },
   {
